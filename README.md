@@ -183,6 +183,14 @@ The release workflow runs the tests and attaches `hirelist.zip` and `hirelist.sk
 
 Developed by Louis Cada ([GitHub](https://github.com/louiscada), [LinkedIn](https://www.linkedin.com/in/louis-cada-3943062a2/)). For questions, bugs or ideas, [open an issue](https://github.com/louiscada/hirelist-skill/issues/new/choose). The same link is at the bottom of Settings in every tracker.
 
+## Credit
+
+If you share, adapt or build on Hirelist, please credit it with a line like this in your README or app:
+
+> Based on [Hirelist](https://github.com/louiscada/hirelist-skill) by Louis Cada.
+
+The license requires keeping the `LICENSE` and `NOTICE` files with any copy you share. The credit line is a request, not a requirement.
+
 ## License
 
 Hirelist is free to use under the [Apache License 2.0](LICENSE). You can use it, adapt it for yourself and share it, as long as you keep the copyright and license notices (see [`NOTICE`](NOTICE)).

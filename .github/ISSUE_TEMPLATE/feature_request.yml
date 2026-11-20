@@ -1,0 +1,20 @@
+name: Idea or feature request
+description: Something that would make Hirelist more useful
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like Hirelist to do?
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why would it help?
+      description: The situation you're in when you'd use it.
+  - type: input
+    id: country
+    attributes:
+      label: Country you're job hunting in (optional)
+      description: Useful for new job sites.

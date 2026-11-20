@@ -1,0 +1,15 @@
+Hirelist
+Copyright 2026 Louis Cada (github.com/louiscada)
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+"Hirelist" identifies the official project. The Apache License does not grant
+permission to use the name (see section 6 of the License); please use a
+different name for modified versions you distribute.
+
+The tracker page loads these libraries and fonts at runtime from public CDNs.
+They are not bundled in this repository and remain under their own licenses:
+  - PDF.js 3.11.174 (Mozilla, Apache License 2.0), to read resume PDFs
+  - jsPDF 2.5.1 (MIT License), to save cover letters as PDF
+  - JSZip 3.10.1 (MIT License or GPLv3, at your choice), to save cover letters as Word files
+  - Schibsted Grotesk and JetBrains Mono (SIL Open Font License 1.1), via Google Fonts

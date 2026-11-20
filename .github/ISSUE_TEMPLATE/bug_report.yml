@@ -1,0 +1,56 @@
+name: Bug report
+description: Something Hirelist did wrong, a job that shouldn't have been suggested, or a tracker problem
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! **Please don't paste your resume, cover letters or anything personal.** Describe the problem, and replace names with made-up ones.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What you did or asked, and what Hirelist did.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+  - type: dropdown
+    id: part
+    attributes:
+      label: Which part?
+      options:
+        - Setup
+        - The daily shortlist (search results or message)
+        - The tracker page
+        - Cover letters
+        - Running without the tracker (jobs.csv)
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where were you using Hirelist?
+      options:
+        - Claude app (desktop)
+        - Claude app (web)
+        - Claude app (mobile)
+        - Claude Code
+        - Another AI app
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Hirelist version
+      description: Shown at the bottom of Settings in your tracker (e.g. v1.0.0).
+  - type: input
+    id: country
+    attributes:
+      label: Country you're job hunting in
+      description: Helps with job-site problems.

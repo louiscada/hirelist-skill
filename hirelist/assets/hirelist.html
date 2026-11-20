@@ -1,0 +1,1270 @@
+<title>Hirelist</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;600;800;900&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: Hirelist Compact — heavy rule header, dense rows led by a huge fit number, fixed bottom tab bar; sheets slide up for detail. */
+:root {
+  --bg: #fbfbf8;
+  --surface: #ffffff;
+  --fg: #111111;
+  --muted: #4d4d48;
+  --line: #d7d6cf;
+  --rule: #111111;
+  --signal: #e8361b;
+  --signal-soft: #fff3ef;
+  --amber: #9a5a00;
+  --amber-soft: #fff1dc;
+  --good: #0f7a55;
+  --good-soft: #e3f4ec;
+  --invert-bg: #111111;
+  --invert-fg: #fbfbf8;
+  --overlay: rgba(17, 17, 17, 0.45);
+  --font-ui: "Schibsted Grotesk", "Helvetica Neue", Arial, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121212; --surface: #1b1b1a; --fg: #f2f0e9; --muted: #b5b3ab; --line: #33332f; --rule: #f2f0e9;
+    --signal: #ff5a3c; --signal-soft: #2a1814; --amber: #f0b54a; --amber-soft: #2e2412; --good: #3ddc97; --good-soft: #13291f;
+    --invert-bg: #f2f0e9; --invert-fg: #121212; --overlay: rgba(0, 0, 0, 0.6); color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121212; --surface: #1b1b1a; --fg: #f2f0e9; --muted: #b5b3ab; --line: #33332f; --rule: #f2f0e9;
+  --signal: #ff5a3c; --signal-soft: #2a1814; --amber: #f0b54a; --amber-soft: #2e2412; --good: #3ddc97; --good-soft: #13291f;
+  --invert-bg: #f2f0e9; --invert-fg: #121212; --overlay: rgba(0, 0, 0, 0.6); color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-ui); font-size: 15px; line-height: 1.45; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+
+.app { max-width: 760px; margin: 0 auto; padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
+body.wide .app { max-width: 1240px; }
+@media (min-width: 1100px) { body.wide .board { grid-auto-columns: minmax(0, 1fr); overflow-x: visible; } body.wide .board-scroll { display: none; } }
+.pad { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+header.top { padding-block: 18px 10px; display: flex; justify-content: space-between; align-items: baseline; gap: 12px; border-bottom: 3px solid var(--rule); }
+.brand { font-weight: 900; font-size: 30px; letter-spacing: -0.03em; line-height: 1; margin: 0; }
+.brand span { color: var(--signal); }
+.stamp { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em; text-align: right; font-variant-numeric: tabular-nums; }
+
+.section-label { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: var(--muted); padding-block: 16px 8px; display: flex; justify-content: space-between; gap: 10px; align-items: center; }
+.section-label button { background: none; border: 0; padding: 0; color: var(--signal); font: inherit; letter-spacing: inherit; min-height: 28px; }
+
+.list { border-top: 1px solid var(--rule); }
+.row { position: relative; border-bottom: 1px solid var(--line); overflow: hidden; background: var(--bg); }
+.row .under { position: absolute; inset: 0; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; font-family: var(--font-mono); font-size: 12px; font-weight: 700; letter-spacing: 0.06em; }
+.row .under .u-left, .row .under .u-right { opacity: 0; }
+.row.sw-right .under { background: var(--good); color: var(--invert-fg); }
+.row.sw-right .under .u-left { opacity: 1; }
+.row.sw-left .under { background: var(--muted); color: var(--bg); }
+.row.sw-left .under .u-right { opacity: 1; }
+.row-inner { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; background: var(--bg); }
+.row.top-pick .row-inner { background: var(--signal-soft); }
+.rowmain {
+  display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; gap: 0 10px; align-items: center;
+  width: 100%; text-align: left; background: transparent; border: 0; padding-block: 12px; padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: 12px; touch-action: pan-y; user-select: none; -webkit-user-select: none; min-height: 64px;
+}
+.fitnum { font-weight: 900; font-size: 40px; line-height: 0.9; letter-spacing: -0.05em; font-variant-numeric: tabular-nums; }
+.fitnum.hi { color: var(--signal); }
+.fitnum.none { font-size: 22px; color: var(--muted); }
+.rtitle { font-size: 15px; font-weight: 800; line-height: 1.2; overflow-wrap: anywhere; }
+.rmeta { font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+.tags { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.tag { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.04em; white-space: nowrap; }
+.tag.new { color: var(--signal); }
+.tag.old { color: var(--amber); }
+.tag.stage { color: var(--good); }
+.tag.dim { color: var(--muted); }
+.rowacts { display: none; gap: 6px; padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+@media (min-width: 640px) { .rowacts { display: flex; } }
+.mini { min-height: 36px; padding: 0 10px; border: 1px solid var(--rule); background: transparent; font-size: 12px; font-weight: 700; }
+.mini.solid { background: var(--invert-bg); color: var(--invert-fg); }
+
+.hint { font-family: var(--font-mono); font-size: 11px; color: var(--muted); display: flex; justify-content: space-between; gap: 10px; padding-block: 10px; }
+.empty { border: 1px dashed var(--line); padding: 24px 18px; text-align: center; color: var(--muted); margin-top: 6px; }
+.empty strong { display: block; color: var(--fg); font-size: 16px; margin-bottom: 4px; }
+
+.fu { display: flex; flex-direction: column; gap: 8px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.fu-top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.fu-acts { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.controls { display: flex; flex-direction: column; gap: 8px; padding-block: 12px; border-bottom: 1px solid var(--rule); }
+.search { display: flex; align-items: center; gap: 8px; border: 1px solid var(--rule); padding: 0 10px; min-height: 42px; background: var(--surface); }
+.search input { border: 0; outline: 0; background: transparent; flex: 1; min-width: 0; font-size: 15px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { min-height: 34px; padding: 0 11px; border: 1px solid var(--rule); background: transparent; font-size: 12px; font-weight: 700; }
+.chip[aria-pressed="true"] { background: var(--invert-bg); color: var(--invert-fg); }
+.seg { display: flex; flex-wrap: wrap; border: 1px solid var(--rule); }
+.seg button { flex: 1 1 auto; min-height: 36px; padding: 0 10px; border: 0; border-right: 1px solid var(--rule); background: transparent; font-size: 12px; font-weight: 700; }
+.seg button:last-child { border-right: 0; }
+.seg button[aria-pressed="true"] { background: var(--invert-bg); color: var(--invert-fg); }
+
+.board { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(230px, 1fr); gap: 10px; overflow-x: auto; padding-block: 12px 4px; scroll-snap-type: x proximity; }
+.col { border-top: 3px solid var(--rule); scroll-snap-align: start; min-width: 0; }
+.col h3 { margin: 0; padding: 8px 0; font-size: 13px; font-weight: 800; display: flex; justify-content: space-between; }
+.col h3 .n { font-family: var(--font-mono); font-size: 12px; }
+.card { border: 1px solid var(--line); background: var(--surface); padding: 10px; display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+.card .open { background: none; border: 0; padding: 0; text-align: left; display: flex; flex-direction: column; gap: 2px; }
+.card select { min-height: 36px; border: 1px solid var(--line); background: var(--bg); padding: 0 6px; font-size: 13px; }
+.colempty { font-size: 12px; color: var(--muted); padding: 6px 0 12px; }
+
+.form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.form .full { grid-column: 1 / -1; }
+.field { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 700; letter-spacing: 0.02em; }
+.field small { font-weight: 400; color: var(--muted); letter-spacing: 0; font-size: 12px; }
+.field input, .field textarea, .field select { border: 1px solid var(--rule); background: var(--surface); padding: 9px 10px; font-size: 15px; font-weight: 400; min-width: 0; border-radius: 0; }
+.field textarea { min-height: 76px; resize: vertical; }
+.toggle { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 14px; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.toggle b { font-size: 15px; }
+.toggle p { margin: 0; font-size: 13px; color: var(--muted); grid-column: 1; }
+.switch { grid-row: 1 / span 2; grid-column: 2; position: relative; width: 52px; height: 30px; }
+.switch input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; width: 100%; height: 100%; }
+.switch span { position: absolute; inset: 0; border: 2px solid var(--rule); background: var(--bg); pointer-events: none; }
+.switch span::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; background: var(--rule); transition: transform .15s ease; }
+.switch input:checked + span { background: var(--signal); border-color: var(--signal); }
+.switch input:checked + span::after { transform: translateX(22px); background: #ffffff; }
+.switch input:focus-visible + span { outline: 2px solid var(--signal); outline-offset: 2px; }
+.primary { min-height: 46px; padding: 0 18px; border: 0; background: var(--invert-bg); color: var(--invert-fg); font-weight: 800; font-size: 15px; }
+.ghost { min-height: 46px; padding: 0 16px; border: 1px solid var(--rule); background: transparent; font-weight: 700; font-size: 14px; }
+.primary:disabled, .ghost:disabled { opacity: 0.55; cursor: progress; }
+.btnrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.saved { font-family: var(--font-mono); font-size: 12px; color: var(--good); }
+.keys { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 14px; font-size: 13px; }
+kbd { font-family: var(--font-mono); font-size: 12px; border: 1px solid var(--rule); padding: 1px 6px; min-width: 22px; display: inline-block; text-align: center; }
+details.log { border-top: 1px solid var(--rule); margin-top: 14px; padding-top: 12px; }
+details.log summary { cursor: pointer; font-weight: 800; padding-block: 6px; }
+details.log .form { margin-top: 10px; }
+
+nav.tabs {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: var(--bg); border-top: 3px solid var(--rule);
+  padding-bottom: env(safe-area-inset-bottom, 0px); padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px);
+}
+nav.tabs .in { max-width: 760px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+nav.tabs button { min-height: 54px; border: 0; background: transparent; font-weight: 800; font-size: 13px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; }
+nav.tabs button[aria-current="page"] { color: var(--signal); }
+nav.tabs .n { font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--muted); min-height: 12px; }
+
+.toast {
+  position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(66px + env(safe-area-inset-bottom, 0px)); z-index: 40;
+  width: min(520px, calc(100% - 32px)); background: var(--invert-bg); color: var(--invert-fg);
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 10px 10px 16px; font-size: 14px; font-weight: 600;
+}
+.toast button { min-height: 40px; padding: 0 14px; border: 1px solid currentColor; background: transparent; color: inherit; font-weight: 800; }
+
+.scrim { position: fixed; inset: 0; z-index: 50; background: var(--overlay); display: flex; align-items: flex-end; justify-content: center; }
+@media (min-width: 760px) { .scrim { align-items: center; } }
+.sheet {
+  width: 100%; max-width: 640px; max-height: 88vh; overflow-y: auto; background: var(--bg); border-top: 3px solid var(--rule);
+  padding-top: 16px; padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 14px;
+}
+@media (min-width: 760px) { .sheet { border: 3px solid var(--rule); } }
+.sheet-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: start; }
+.sheet-head .fitnum { font-size: 72px; }
+.sheet-head h2 { margin: 0; font-size: 20px; line-height: 1.15; font-weight: 800; overflow-wrap: anywhere; }
+.x { width: 44px; height: 44px; border: 1px solid var(--rule); background: transparent; font-size: 18px; font-weight: 800; }
+.bars { display: flex; flex-direction: column; gap: 6px; }
+.bar { display: grid; grid-template-columns: 92px minmax(0, 1fr) 24px; gap: 10px; align-items: center; font-size: 13px; }
+.bar .track { height: 8px; background: var(--line); position: relative; }
+.bar .fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--fg); }
+.bar b { font-family: var(--font-mono); font-size: 12px; text-align: right; }
+.kv { font-size: 14px; display: flex; flex-direction: column; gap: 6px; }
+.kv .gap { color: var(--muted); }
+.stagepick { display: flex; flex-wrap: wrap; gap: 6px; }
+.stagepick button { min-height: 40px; padding: 0 12px; border: 1px solid var(--rule); background: transparent; font-size: 13px; font-weight: 700; }
+.stagepick button[aria-pressed="true"] { background: var(--invert-bg); color: var(--invert-fg); }
+.reasons { display: flex; flex-wrap: wrap; gap: 8px; }
+.reasons button { min-height: 46px; padding: 0 14px; border: 1px solid var(--rule); background: transparent; font-weight: 700; font-size: 14px; }
+.link-out { color: var(--signal); font-weight: 800; text-decoration: none; }
+.link-out:hover { text-decoration: underline; }
+
+.onb { position: fixed; inset: 0; z-index: 60; background: var(--bg); overflow-y: auto; }
+.onb .in { max-width: 560px; margin: 0 auto; min-height: 100%; display: flex; flex-direction: column; gap: 18px; padding-block: 28px calc(28px + env(safe-area-inset-bottom, 0px)); }
+.onb h2 { margin: 0; font-size: 34px; line-height: 1; font-weight: 900; letter-spacing: -0.03em; text-wrap: balance; }
+.onb h2:focus { outline: none; }
+.onb .lead { margin: 0; font-size: 16px; color: var(--muted); max-width: 52ch; }
+.steps { display: flex; gap: 6px; }
+.steps span { height: 4px; flex: 1; background: var(--line); }
+.steps span.on { background: var(--signal); }
+.bigrule { border-top: 3px solid var(--rule); }
+.feature { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.feature .num { font-weight: 900; font-size: 36px; line-height: 0.9; color: var(--signal); }
+.feature b { display: block; font-size: 15px; }
+.feature span { font-size: 14px; color: var(--muted); }
+.status-line { font-size: 13px; color: var(--amber); min-height: 1.2em; }
+.filebtn { position: relative; display: inline-flex; align-items: center; justify-content: center; min-height: 46px; padding: 0 16px; border: 1px solid var(--rule); background: var(--invert-bg); color: var(--invert-fg); font-weight: 800; font-size: 14px; cursor: pointer; }
+.filebtn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.filebtn:focus-within { outline: 2px solid var(--signal); outline-offset: 2px; }
+.resume-box { display: flex; flex-direction: column; gap: 10px; }
+.resume-box textarea { min-height: 200px; font-size: 14px; line-height: 1.5; }
+.resume-meta { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+.privacy { margin: 0; font-size: 13px; color: var(--muted); max-width: 60ch; }
+.privacy b { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; color: var(--amber); }
+.nudge { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.letter textarea.out { min-height: 320px; font-size: 15px; line-height: 1.55; }
+.letter textarea.jd { min-height: 90px; font-size: 14px; }
+.thinking { font-family: var(--font-mono); font-size: 12px; color: var(--muted); min-height: 1.2em; }
+.letter .field { margin-top: 6px; }
+.sheet > * { flex-shrink: 0; }
+@media (max-width: 520px) { .form { grid-template-columns: minmax(0, 1fr); } }
+@media (prefers-reduced-motion: reduce) { .switch span::after { transition: none; } }
+</style>
+
+<div class="app" id="app">
+  <header class="top pad">
+    <h1 class="brand">Hirelist<span>.</span></h1>
+    <div class="stamp" id="stamp">LOADING…</div>
+  </header>
+  <main id="main" class="pad">
+    <div class="empty"><strong>Opening your list</strong>Your saved jobs will appear here in a moment.</div>
+  </main>
+</div>
+
+<nav class="tabs" aria-label="Sections">
+  <div class="in">
+    <button type="button" data-view="today" aria-current="page">Today<span class="n" id="n-today"></span></button>
+    <button type="button" data-view="all">All jobs<span class="n" id="n-all"></span></button>
+    <button type="button" data-view="board">Board<span class="n" id="n-board"></span></button>
+    <button type="button" data-view="settings">Settings<span class="n"></span></button>
+  </div>
+</nav>
+
+<div id="toastHost" aria-live="polite"></div>
+<div id="sheetHost"></div>
+<div id="onbHost"></div>
+
+<script>
+(function () {
+  var VERSION = "1.0.0";
+  var COLL = "jobs", SETDOC = "settings/prefs", RESDOC = "settings/resume";
+  var LIBS = {
+    pdfWorker: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js",
+    pdf: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+    jspdf: "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js",
+    jszip: "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"
+  };
+  var PIPE = ["applied", "interviewing", "offer", "rejected", "no_response"];
+  var LABEL = { "new": "To review", applied: "Applied", interviewing: "Interviewing", offer: "Offer", rejected: "Rejected", no_response: "No response", skipped: "Not for me", expired: "Expired" };
+  var REASONS = [["wrong_role", "Wrong role"], ["too_senior", "Too senior"], ["salary", "Salary too low"], ["location", "Location"], ["company", "Company"], ["other", "Other"]];
+  var BREAK = [["skills", "Skills"], ["experience", "Experience"], ["role", "Role match"], ["location", "Location"]];
+  var DEFAULTS = { onboarded: false, name: "", roles: "", avoid: "", maxYears: 3, location: "", salaryFloor: "", learnFromDismissals: true, autoCheckClosed: true, followUps: true, followUpDays: 7 };
+
+  var db = null, jobs = [], settings = null, jobsReady = false, settingsReady = false;
+  var view = "today", q = "", sort = "fit", fAI = false, fRemote = false, fSource = null, statusFilter = "review";
+  var openId = null, reasonFor = null, undoState = null, toastTimer = null, suppressClick = false;
+  var letterMsg = "";
+  var resume = null, resumeReady = false, letterFor = null, letterCtl = null, sheetLocked = false, onbResume = null;
+  var chains = {}, noteTimers = {};
+  var mainEl = document.getElementById("main");
+  var stampEl = document.getElementById("stamp");
+  var searchInput = null;
+
+  /* ---------- helpers ---------- */
+  function today() {
+    try { return new Date().toLocaleDateString("en-CA"); }
+    catch (e) { return new Date().toISOString().slice(0, 10); }
+  }
+  function daysSince(d) {
+    if (!d || !/^\d{4}-\d{2}-\d{2}/.test(d)) return null;
+    var a = Date.parse(d.slice(0, 10) + "T00:00:00Z"), b = Date.parse(today() + "T00:00:00Z");
+    return Math.max(0, Math.round((b - a) / 86400000));
+  }
+  function fmtDate(d) {
+    if (!d || !/^\d{4}-\d{2}-\d{2}/.test(d)) return "";
+    var p = d.slice(0, 10).split("-");
+    return ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][+p[1] - 1] + " " + (+p[2]);
+  }
+  function slug(company, title) {
+    return (String(company) + "-" + String(title)).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 120).replace(/-+$/g, "");
+  }
+  function safeUrl(u) { return typeof u === "string" && /^https?:\/\//i.test(u) ? u : null; }
+  function esc(s) { return window.CSS && CSS.escape ? CSS.escape(s) : String(s).replace(/"/g, '\\"'); }
+  function statusOf(j) { return LABEL[j.status] ? j.status : "new"; }
+  function inPipe(j) { return PIPE.indexOf(statusOf(j)) >= 0; }
+  function isAI(j) { return j.isAI === true || /(^|[^a-z])(ai|llm|genai|prompt|machine learning|artificial intelligence)([^a-z]|$)/i.test(String(j.title || "")); }
+  function isRemote(j) { return /remote|work from home|wfh/i.test(String(j.location || "")); }
+  function fitOf(j) { var n = Number(j.fit); return j.fit == null || j.fit === "" || isNaN(n) ? null : n; }
+  function byId(id) { for (var i = 0; i < jobs.length; i++) if (jobs[i].id === id) return jobs[i]; return null; }
+  function S() { return Object.assign({}, DEFAULTS, settings || {}); }
+  function h(tag, attrs, kids) {
+    var el = document.createElement(tag);
+    if (attrs) for (var k in attrs) {
+      var v = attrs[k];
+      if (v == null || v === false) continue;
+      if (k === "class") el.className = v;
+      else if (k === "text") el.textContent = v;
+      else if (k === "value") el.value = v;
+      else if (k === "checked") el.checked = !!v;
+      else if (k.slice(0, 2) === "on") el.addEventListener(k.slice(2), v);
+      else el.setAttribute(k, v === true ? "" : v);
+    }
+    (kids || []).forEach(function (c) { if (c != null && c !== false) el.appendChild(typeof c === "string" ? document.createTextNode(c) : c); });
+    return el;
+  }
+  function byFit(a, b) {
+    var fa = fitOf(a), fb = fitOf(b);
+    if (fa !== fb) return (fb == null ? -1 : fb) - (fa == null ? -1 : fa);
+    return (b.found || "") < (a.found || "") ? -1 : (b.found || "") > (a.found || "") ? 1 : 0;
+  }
+  function byNewest(a, b) {
+    var x = a.found || "", y = b.found || "";
+    if (x !== y) return x < y ? 1 : -1;
+    return byFit(a, b);
+  }
+
+  /* ---------- libraries, resume, letters ---------- */
+  var scriptCache = {};
+  function loadScript(src) {
+    if (scriptCache[src]) return scriptCache[src];
+    scriptCache[src] = new Promise(function (resolve, reject) {
+      var s = document.createElement("script");
+      s.src = src; s.async = true;
+      s.onload = function () { resolve(); };
+      s.onerror = function () { delete scriptCache[src]; reject({ code: "lib" }); };
+      document.head.appendChild(s);
+    });
+    return scriptCache[src];
+  }
+  function wordCount(t) { t = String(t || "").trim(); return t ? t.split(/\s+/).length : 0; }
+  function extractPdf(file) {
+    return loadScript(LIBS.pdfWorker).then(function () { return loadScript(LIBS.pdf); }).then(function () {
+      var lib = window.pdfjsLib;
+      if (!lib) throw { code: "lib" };
+      return file.arrayBuffer().then(function (buf) { return lib.getDocument({ data: new Uint8Array(buf), isEvalSupported: false }).promise; });
+    }).then(function (pdf) {
+      var pages = [], n = Math.min(pdf.numPages, 12), chain = Promise.resolve();
+      for (var i = 1; i <= n; i++) (function (i) {
+        chain = chain.then(function () { return pdf.getPage(i); }).then(function (p) { return p.getTextContent(); }).then(function (tc) {
+          var out = "", lastY = null;
+          tc.items.forEach(function (it) {
+            var y = it.transform ? it.transform[5] : null;
+            if (lastY !== null && y !== null && Math.abs(y - lastY) > 2) out += "\n";
+            else if (out && !/\s$/.test(out) && it.str && !/^\s/.test(it.str)) out += " ";
+            out += it.str || "";
+            lastY = y;
+          });
+          pages.push(out);
+        });
+      })(i);
+      return chain.then(function () {
+        return { text: pages.join("\n\n").replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim(), pages: pdf.numPages };
+      });
+    });
+  }
+  function privacyNote() {
+    return h("p", { class: "privacy" }, [h("b", { text: "PRIVATE UNLESS SHARED — " }), "Your resume is saved with this list. Anyone you share the Hirelist link with can see it too, so keep the link to yourself."]);
+  }
+  function resumeEditor(st, onChange, idp) {
+    var meta = h("div", { class: "resume-meta", role: "status" });
+    function describe() {
+      if (!String(st.text || "").trim()) return "No resume yet.";
+      return (st.name ? st.name : "Pasted text") + " · " + wordCount(st.text) + " words" + (st.updatedOn ? " · saved " + fmtDate(st.updatedOn) : "");
+    }
+    meta.textContent = describe();
+    var ta = h("textarea", { id: idp + "-text", value: st.text || "", placeholder: "Paste your resume here, or upload a PDF above." });
+    ta.addEventListener("input", function () { st.text = ta.value; if (!st.source) st.source = "paste"; meta.textContent = describe(); if (onChange) onChange(); });
+    var file = h("input", { type: "file", id: idp + "-file", accept: ".pdf,.txt,.md,application/pdf,text/plain" });
+    file.addEventListener("change", function () {
+      var f = file.files && file.files[0];
+      if (!f) return;
+      meta.textContent = "Reading " + f.name + "…";
+      var isPdf = /\.pdf$/i.test(f.name) || f.type === "application/pdf";
+      var job = isPdf ? extractPdf(f) : f.text().then(function (t) { return { text: t, pages: null }; });
+      job.then(function (r) {
+        if (!r.text || r.text.replace(/\s/g, "").length < 40) {
+          meta.textContent = "Couldn't find text in " + f.name + ". It may be a scanned image. Paste the text instead.";
+          return;
+        }
+        st.text = r.text.slice(0, 60000); st.name = f.name; st.source = isPdf ? "pdf" : "file"; st.updatedOn = null;
+        ta.value = st.text;
+        meta.textContent = f.name + " · " + wordCount(st.text) + " words read. Check the text below and fix anything that came out jumbled.";
+        if (onChange) onChange();
+      }, function () {
+        meta.textContent = "Couldn't open " + f.name + ". Check your connection, or paste the text instead.";
+      }).then(function () { file.value = ""; });
+    });
+    return h("div", { class: "resume-box" }, [
+      h("div", { class: "btnrow" }, [h("label", { class: "filebtn" }, ["Upload PDF", file]), h("span", { class: "rmeta", text: "or paste the text below" })]),
+      meta,
+      h("label", { class: "field", for: idp + "-text" }, ["Resume text"]),
+      ta
+    ]);
+  }
+  function saveResume(st) {
+    if (!db) return Promise.reject({ code: "unavailable" });
+    var doc = { text: String(st.text || "").trim().slice(0, 60000), fileName: st.name || null, source: st.source || "paste", updatedOn: today() };
+    return db.doc(RESDOC).set(doc).then(function () { resume = doc; });
+  }
+  function pdfSafe(s) {
+    return String(s).replace(/[‘’‛′]/g, "'").replace(/[“”″]/g, '"').replace(/[–—−]/g, "-")
+      .replace(/…/g, "...").replace(/[•●]/g, "-").replace(/₱/g, "PHP ").replace(/€/g, "EUR ").replace(/₹/g, "INR ").replace(/₩/g, "KRW ").replace(/ /g, " ").replace(/[^\n\x20-\x7E¡-ÿ]/g, "");
+  }
+  function xmlEsc(s) {
+    return String(s).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+  function letterDate() {
+    try { return new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }); }
+    catch (e) { return new Date().toDateString(); }
+  }
+  function letterPdf(text) {
+    return loadScript(LIBS.jspdf).then(function () {
+      var J = window.jspdf && window.jspdf.jsPDF;
+      if (!J) throw { code: "lib" };
+      var doc = new J({ unit: "mm", format: "a4" });
+      var margin = 24, width = 210 - margin * 2, y = 28, lh = 5.8;
+      doc.setFont("helvetica", "normal"); doc.setFontSize(11);
+      [letterDate(), ""].concat(pdfSafe(text).split("\n")).forEach(function (line) {
+        var parts = line.trim() === "" ? [""] : doc.splitTextToSize(line, width);
+        parts.forEach(function (w) {
+          if (y > 297 - margin) { doc.addPage(); y = 28; }
+          if (w) doc.text(w, margin, y);
+          y += lh;
+        });
+      });
+      return doc.output("blob");
+    });
+  }
+  function letterDocx(text) {
+    return loadScript(LIBS.jszip).then(function () {
+      var Z = window.JSZip;
+      if (!Z) throw { code: "lib" };
+      var zip = new Z();
+      zip.file("[Content_Types].xml", '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>');
+      zip.file("_rels/.rels", '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>');
+      var run = function (t) { return '<w:r><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri"/><w:sz w:val="22"/></w:rPr><w:t xml:space="preserve">' + xmlEsc(t) + '</w:t></w:r>'; };
+      var paras = [letterDate()].concat(String(text).replace(/\r/g, "").split(/\n\s*\n/));
+      var body = paras.map(function (p) {
+        return '<w:p><w:pPr><w:spacing w:after="200" w:line="276" w:lineRule="auto"/></w:pPr>' +
+          p.split("\n").map(function (l, i) { return (i ? '<w:r><w:br/></w:r>' : '') + run(l); }).join("") + '</w:p>';
+      }).join("");
+      zip.file("word/document.xml", '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>' + body +
+        '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440" w:header="708" w:footer="708" w:gutter="0"/></w:sectPr></w:body></w:document>');
+      return zip.generateAsync({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+    });
+  }
+  function fileBase(j) {
+    return ("Cover letter - " + [j.company, j.title].filter(Boolean).join(" - ")).replace(/[\\\/:*?"<>|]+/g, "").replace(/\s+/g, " ").trim().slice(0, 120);
+  }
+  function saveFile(name, build) {
+    var use = window.claude && window.claude.use;
+    if (!use) { showToast("Saving files isn't available here. Use Copy instead.", null); return; }
+    window.claude.use("downloads").then(function (dl) {
+      if (!dl) { showToast("Saving files isn't available here. Use Copy instead.", null); return; }
+      return build().then(function (blob) { return dl.save({ filename: name, data: blob }); }).then(function () {
+        showToast("Saved " + name, null);
+      }, function (e) {
+        if (e && e.code === "declined") return;
+        showToast(e && e.code === "lib" ? "Couldn't build the file. Check your connection and try again." : "Couldn't save the file. Use Copy instead.", null);
+      });
+    });
+  }
+  function letterPrompt(j, jdText, resumeText) {
+    var name = String(S().name || "").trim();
+    return [
+      "Write a short cover letter for a job application.",
+      "Rules:",
+      "- 170 to 230 words in three or four short paragraphs. Plain text only: no markdown, headings or bullet points.",
+      "- Open with \"Dear Hiring Manager,\" unless the job description names the person to address.",
+      "- Use ONLY facts found in the resume below. Never invent experience, numbers, employers, certifications or skills.",
+      "- First paragraph: the role, and why this company and role appeal to the candidate. Middle: two or three specific achievements from the resume that match the role. Last: availability and thanks.",
+      "- Close with \"Sincerely,\" on its own line, then the candidate's full name as written on the resume" + (name ? " (they go by " + name + ")" : "") + ".",
+      "- No placeholders like [Company] or [Date]. Plain, confident, warm English. Avoid stock openers such as \"I am writing to express my interest\".",
+      "- Reply with the letter only, nothing before or after it.",
+      "",
+      "JOB",
+      "Title: " + (j.title || ""),
+      "Company: " + (j.company || ""),
+      "Location: " + (j.location || ""),
+      "Why it fits (notes from the candidate's job tracker): " + (j.why || "none"),
+      "Possible gaps: " + (j.gap || "none"),
+      "",
+      "JOB DESCRIPTION (pasted from the posting; may be empty)",
+      jdText ? jdText.slice(0, 8000) : "(not provided)",
+      "",
+      "RESUME",
+      String(resumeText).slice(0, 16000)
+    ].join("\n");
+  }
+  function cleanLetter(t) {
+    return String(t || "").replace(/\*\*/g, "").replace(/^#+\s*/gm, "").replace(/^\s*(here is|here's)[^\n]*:\s*\n/i, "").trim();
+  }
+
+  /* ---------- writes ---------- */
+  function queueWrite(id, patch) {
+    if (!db) return Promise.reject({ code: "unavailable" });
+    var p = (chains[id] || Promise.resolve()).catch(function () {}).then(function () { return db.collection(COLL).doc(id).update(patch); });
+    chains[id] = p;
+    return p;
+  }
+  function saveErr(e) {
+    showToast(e && e.code === "invalid_argument" ? "You can view this list but not change it." : "Couldn't save that. Check your connection and try again.", null);
+  }
+  function patchFor(j, next, extra) {
+    var t = today(), patch = { status: next, stageOn: t };
+    if (next === "new") { patch.appliedOn = null; patch.expiredOn = null; patch.skipReason = null; }
+    if (next === "expired") patch.expiredOn = t;
+    if (next === "skipped") patch.skipReason = (extra && extra.reason) || null;
+    if (PIPE.indexOf(next) >= 0 && !(j.appliedOn && inPipe(j))) patch.appliedOn = t;
+    return patch;
+  }
+  function apply(j, patch, message) {
+    var prev = {};
+    Object.keys(patch).forEach(function (k) { prev[k] = j[k] === undefined ? null : j[k]; });
+    queueWrite(j.id, patch).then(function () {
+      undoState = { id: j.id, prev: prev };
+      showToast(message, doUndo);
+    }, saveErr);
+  }
+  function setStatus(j, next, extra) {
+    if (!j) return;
+    var label = { applied: "Marked applied", skipped: "Moved to Not for me", expired: "Marked expired", "new": "Moved back to review" }[next] || ("Moved to " + LABEL[next]);
+    apply(j, patchFor(j, next, extra), label);
+  }
+  function act(j, kind) {
+    if (!j) return;
+    if (kind === "applied") setStatus(j, "applied");
+    else if (kind === "expired") setStatus(j, "expired");
+    else if (kind === "skip") {
+      if (S().learnFromDismissals) { reasonFor = j.id; renderReason(); }
+      else setStatus(j, "skipped");
+    }
+  }
+  function doUndo() {
+    if (!undoState) return;
+    var u = undoState; undoState = null;
+    queueWrite(u.id, u.prev).then(function () { showToast("Undone", null); }, saveErr);
+  }
+  function saveSettings(obj) {
+    if (!db) return Promise.reject({ code: "unavailable" });
+    var next = Object.assign({}, S(), obj, { updatedOn: today() });
+    return db.doc(SETDOC).set(next).then(function () { settings = next; });
+  }
+
+  /* ---------- toast ---------- */
+  function showToast(msg, onUndo) {
+    var host = document.getElementById("toastHost");
+    clearTimeout(toastTimer);
+    var kids = [h("span", { text: msg })];
+    if (onUndo) kids.push(h("button", { type: "button", text: "Undo", onclick: function () { host.replaceChildren(); onUndo(); } }));
+    host.replaceChildren(h("div", { class: "toast", role: "status" }, kids));
+    toastTimer = setTimeout(function () { host.replaceChildren(); if (onUndo) undoState = null; }, 6000);
+  }
+
+  /* ---------- rows ---------- */
+  function tagsFor(j) {
+    var t = [], st = statusOf(j), age = daysSince(j.posted);
+    if (st !== "new") t.push(h("span", { class: "tag stage", text: LABEL[st].toUpperCase() }));
+    else if (j.found === today()) t.push(h("span", { class: "tag new", text: "NEW" }));
+    if (age != null && st === "new") t.push(h("span", { class: "tag " + (age >= 21 ? "old" : "dim"), text: age + "D", title: "Posted " + age + " days ago" }));
+    if (isAI(j)) t.push(h("span", { class: "tag dim", text: "AI" }));
+    return t;
+  }
+  function row(j, opts) {
+    var st = statusOf(j), fit = fitOf(j);
+    var meta = [j.company, j.location, j.source].filter(Boolean).join(" · ");
+    var main = h("button", {
+      type: "button", class: "rowmain", "data-jid": j.id,
+      "aria-label": (j.title || "Untitled role") + ", " + (j.company || "") + (fit != null ? ", fit " + fit + " of 10" : "") + ", " + LABEL[st],
+      onclick: function () { if (suppressClick) return; openSheet(j.id); }
+    }, [
+      h("span", { class: "fitnum" + (fit == null ? " none" : fit >= 9 ? " hi" : ""), text: fit == null ? "—" : String(fit), "aria-hidden": "true" }),
+      h("span", { style: "display:flex;flex-direction:column;min-width:0" }, [
+        h("span", { class: "rtitle", text: j.title || "Untitled role" }),
+        h("span", { class: "rmeta", text: meta })
+      ]),
+      h("span", { class: "tags", "aria-hidden": "true" }, tagsFor(j))
+    ]);
+    var acts = null;
+    if (st === "new") {
+      acts = h("div", { class: "rowacts" }, [
+        h("button", { type: "button", class: "mini solid", text: "Applied", onclick: function () { act(j, "applied"); } }),
+        h("button", { type: "button", class: "mini", text: "Not for me", onclick: function () { act(j, "skip"); } }),
+        h("button", { type: "button", class: "mini", text: "Closed", onclick: function () { act(j, "expired"); } })
+      ]);
+    }
+    var inner = h("div", { class: "row-inner" }, [main, acts]);
+    var wrap = h("div", { class: "row" + (opts && opts.top ? " top-pick" : "") }, [
+      h("div", { class: "under", "aria-hidden": "true" }, [h("span", { class: "u-left", text: "APPLIED ✓" }), h("span", { class: "u-right", text: "NOT FOR ME ✕" })]),
+      inner
+    ]);
+    if (st === "new" && db) attachSwipe(wrap, inner, j);
+    return wrap;
+  }
+  function attachSwipe(wrap, inner, j) {
+    var sx = 0, sy = 0, dx = 0, active = false, decided = false, horiz = false, pid = null;
+    function reset() { inner.style.transform = ""; wrap.classList.remove("sw-right", "sw-left"); }
+    inner.addEventListener("pointerdown", function (e) {
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+      if (e.target.closest(".rowacts")) return;
+      sx = e.clientX; sy = e.clientY; dx = 0; active = true; decided = false; horiz = false; pid = e.pointerId;
+    });
+    inner.addEventListener("pointermove", function (e) {
+      if (!active) return;
+      var mx = e.clientX - sx, my = e.clientY - sy;
+      if (!decided) {
+        if (Math.abs(mx) < 10 && Math.abs(my) < 10) return;
+        decided = true; horiz = Math.abs(mx) > Math.abs(my) * 1.2;
+        if (!horiz) { active = false; return; }
+        try { inner.setPointerCapture(pid); } catch (_) {}
+      }
+      dx = mx; inner.style.transform = "translateX(" + dx + "px)";
+      wrap.classList.toggle("sw-right", dx > 0); wrap.classList.toggle("sw-left", dx < 0);
+    });
+    function end() {
+      if (!active) return;
+      active = false;
+      if (!horiz) return;
+      suppressClick = true; setTimeout(function () { suppressClick = false; }, 80);
+      reset();
+      if (dx > 96) act(j, "applied");
+      else if (dx < -96) act(j, "skip");
+    }
+    inner.addEventListener("pointerup", end);
+    inner.addEventListener("pointercancel", function () { active = false; reset(); });
+  }
+
+  /* ---------- views ---------- */
+  function counts() {
+    var c = { review: 0, pipe: 0, interviewing: 0, skipped: 0, expired: 0 };
+    jobs.forEach(function (j) {
+      var s = statusOf(j);
+      if (s === "new") c.review++; else if (PIPE.indexOf(s) >= 0) c.pipe++; else if (s === "skipped") c.skipped++; else if (s === "expired") c.expired++;
+      if (s === "interviewing") c.interviewing++;
+    });
+    return c;
+  }
+  function followUpsDue() {
+    var s = S();
+    if (!s.followUps) return [];
+    var days = Math.max(1, Number(s.followUpDays) || 7);
+    return jobs.filter(function (j) {
+      var d = daysSince(j.appliedOn);
+      return statusOf(j) === "applied" && d != null && d >= days && !j.followUpDoneOn;
+    }).sort(function (a, b) { return (a.appliedOn || "") < (b.appliedOn || "") ? -1 : 1; });
+  }
+  function renderChrome() {
+    var c = counts(), t = today();
+    document.body.classList.toggle("wide", view === "board");
+    stampEl.textContent = t.slice(8, 10) + "." + t.slice(5, 7) + " · " + c.review + " TO REVIEW · " + c.pipe + " SENT";
+    document.getElementById("n-today").textContent = c.review ? String(Math.min(3, c.review)) : "";
+    document.getElementById("n-all").textContent = jobs.length ? String(jobs.length) : "";
+    document.getElementById("n-board").textContent = c.pipe ? String(c.pipe) : "";
+    document.querySelectorAll("nav.tabs button").forEach(function (b) {
+      if (b.dataset.view === view) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
+    });
+  }
+  function render() {
+    var fid = document.activeElement && document.activeElement.dataset ? document.activeElement.dataset.jid : null;
+    renderChrome();
+    if (!db) return;
+    if (view === "settings") { if (!mainEl.querySelector("#settingsForm")) renderSettings(); }
+    else if (view === "today") renderToday();
+    else if (view === "all") renderAll();
+    else if (view === "board") renderBoard();
+    if (fid) { var el = mainEl.querySelector('[data-jid="' + esc(fid) + '"]'); if (el) el.focus(); }
+    if (openId && !document.getElementById("sheetHost").contains(document.activeElement)) renderSheet();
+  }
+  function go(v) {
+    view = v; mainEl.replaceChildren(); render(); window.scrollTo(0, 0);
+  }
+
+  function renderToday() {
+    var review = jobs.filter(function (j) { return statusOf(j) === "new"; }).sort(byFit);
+    var top = review.slice(0, 3);
+    var due = followUpsDue();
+    var s = S();
+    var nodes = [];
+    if (resumeReady && !(resume && resume.text)) {
+      nodes.push(h("div", { class: "nudge" }, [
+        h("span", { text: "Add your resume so your shortlist and cover letters can use it." }),
+        h("button", { type: "button", class: "mini solid", text: "Add resume", onclick: function () { go("settings"); } })
+      ]));
+    }
+    nodes.push(h("div", { class: "section-label" }, [
+      h("span", { text: (s.name ? "HI " + s.name.toUpperCase() + " — " : "") + "APPLY TODAY" }),
+      review.length > 3 ? h("button", { type: "button", text: "ALL " + review.length + " TO REVIEW →", onclick: function () { statusFilter = "review"; go("all"); } }) : null
+    ]));
+    if (top.length) {
+      nodes.push(h("div", { class: "list" }, top.map(function (j, i) { return row(j, { top: i === 0 }); })));
+      nodes.push(h("div", { class: "hint", "aria-hidden": "true" }, [h("span", { text: "← SWIPE: NOT FOR ME" }), h("span", { text: "SWIPE: APPLIED →" })]));
+    } else {
+      nodes.push(h("div", { class: "empty" }, [h("strong", { text: jobs.length ? "You're all caught up" : "No jobs yet" }), jobs.length ? "New matches from your weekday shortlist will land here." : "Your weekday shortlist adds its first matches here. You can also log a job under All jobs."]));
+    }
+    if (due.length) {
+      nodes.push(h("div", { class: "section-label" }, [h("span", { text: "FOLLOW UP" }), h("span", { text: due.length + " WAITING" })]));
+      nodes.push(h("div", { class: "list" }, due.map(function (j) {
+        var d = daysSince(j.appliedOn);
+        return h("div", { class: "fu" }, [
+          h("div", { class: "fu-top" }, [
+            h("span", null, [h("b", { text: j.company || "Company" }), " · " + (j.title || "")]),
+            h("span", { class: "tag old", text: d + "D NO REPLY" })
+          ]),
+          h("div", { class: "fu-acts" }, [
+            h("button", { type: "button", class: "mini solid", text: "I followed up", onclick: function () { apply(j, { followUpDoneOn: today() }, "Follow-up logged"); } }),
+            h("button", { type: "button", class: "mini", text: "Got an interview", onclick: function () { setStatus(j, "interviewing"); } }),
+            h("button", { type: "button", class: "mini", text: "No response", onclick: function () { setStatus(j, "no_response"); } })
+          ])
+        ]);
+      })));
+    }
+    var c = counts();
+    nodes.push(h("div", { class: "section-label" }, [h("span", { text: "THIS SEARCH" })]));
+    nodes.push(h("div", { class: "list" }, [
+      h("div", { class: "hint", style: "padding-block:12px;flex-wrap:wrap" }, [
+        h("span", { text: c.pipe + " APPLIED · " + c.interviewing + " INTERVIEWING" }),
+        h("span", { text: c.skipped + " PASSED · " + c.expired + " CLOSED" })
+      ])
+    ]));
+    mainEl.replaceChildren.apply(mainEl, nodes);
+  }
+
+  function ensureSearch() {
+    if (searchInput) return searchInput;
+    searchInput = h("input", { type: "search", id: "q", placeholder: "Search role or company", "aria-label": "Search jobs", autocomplete: "off" });
+    searchInput.addEventListener("input", function () { q = searchInput.value.trim().toLowerCase(); renderAllList(); });
+    return searchInput;
+  }
+  function renderAll() {
+    var hadFocus = document.activeElement === searchInput;
+    var sources = {};
+    jobs.forEach(function (j) { if (j.source) sources[j.source] = true; });
+    var segs = [["review", "To review"], ["pipe", "Applied"], ["skipped", "Not for me"], ["expired", "Expired"], ["all", "All"]];
+    var controls = h("div", { class: "controls" }, [
+      h("label", { class: "search" }, [
+        h("span", { "aria-hidden": "true", text: "⌕", style: "font-size:18px;line-height:1" }),
+        ensureSearch()
+      ]),
+      h("div", { class: "seg", role: "group", "aria-label": "Status" }, segs.map(function (s) {
+        return h("button", { type: "button", "aria-pressed": statusFilter === s[0] ? "true" : "false", text: s[1], onclick: function () { statusFilter = s[0]; renderAll(); } });
+      })),
+      h("div", { class: "chips", role: "group", "aria-label": "Sort and filter" }, [
+        h("button", { type: "button", class: "chip", "aria-pressed": sort === "fit" ? "true" : "false", text: "Best fit", onclick: function () { sort = "fit"; renderAll(); } }),
+        h("button", { type: "button", class: "chip", "aria-pressed": sort === "new" ? "true" : "false", text: "Newest", onclick: function () { sort = "new"; renderAll(); } }),
+        h("button", { type: "button", class: "chip", "aria-pressed": fAI ? "true" : "false", text: "AI", onclick: function () { fAI = !fAI; renderAll(); } }),
+        h("button", { type: "button", class: "chip", "aria-pressed": fRemote ? "true" : "false", text: "Remote", onclick: function () { fRemote = !fRemote; renderAll(); } })
+      ].concat(Object.keys(sources).sort().map(function (src) {
+        return h("button", { type: "button", class: "chip", "aria-pressed": fSource === src ? "true" : "false", text: src, onclick: function () { fSource = fSource === src ? null : src; renderAll(); } });
+      })))
+    ]);
+    var openLog = mainEl.querySelector("details.log[open]");
+    var log = openLog || logForm();
+    mainEl.replaceChildren(controls, h("div", { id: "allList" }), log);
+    if (hadFocus) searchInput.focus();
+    renderAllList();
+  }
+  function renderAllList() {
+    var host = document.getElementById("allList");
+    if (!host) return;
+    var list = jobs.filter(function (j) {
+      var s = statusOf(j);
+      if (statusFilter === "review" && s !== "new") return false;
+      if (statusFilter === "pipe" && PIPE.indexOf(s) < 0) return false;
+      if (statusFilter === "skipped" && s !== "skipped") return false;
+      if (statusFilter === "expired" && s !== "expired") return false;
+      if (fAI && !isAI(j)) return false;
+      if (fRemote && !isRemote(j)) return false;
+      if (fSource && j.source !== fSource) return false;
+      if (q && (String(j.title || "") + " " + String(j.company || "") + " " + String(j.location || "")).toLowerCase().indexOf(q) < 0) return false;
+      return true;
+    }).sort(sort === "fit" ? byFit : byNewest);
+    if (!list.length) {
+      host.replaceChildren(h("div", { class: "empty" }, [h("strong", { text: "Nothing matches" }), q || fAI || fRemote || fSource ? "Try clearing a filter or the search." : "Jobs will show up here as your shortlist finds them."]));
+      return;
+    }
+    host.replaceChildren(h("div", { class: "list", style: "border-top:0" }, list.map(function (j) { return row(j); })));
+  }
+  function logForm() {
+    var status = h("div", { class: "status-line", role: "status" });
+    var form = h("form", { class: "form", novalidate: true }, [
+      h("label", { class: "field" }, ["Job title", h("input", { type: "text", id: "lg-title", required: true, placeholder: "e.g. GRC Analyst" })]),
+      h("label", { class: "field" }, ["Company", h("input", { type: "text", id: "lg-company", required: true, placeholder: "e.g. Northwind Bank" })]),
+      h("label", { class: "field full" }, ["Link (optional)", h("input", { type: "url", id: "lg-link", placeholder: "https://" })]),
+      h("label", { class: "field" }, ["Where it stands", h("select", { id: "lg-stage" }, [
+        h("option", { value: "applied", text: "Applied" }), h("option", { value: "interviewing", text: "Interviewing" }),
+        h("option", { value: "new", text: "Not applied yet" })
+      ])]),
+      h("div", { class: "btnrow", style: "align-self:end" }, [h("button", { type: "submit", class: "primary", id: "lg-submit", text: "Add job" })]),
+      h("div", { class: "full" }, [status])
+    ]);
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var title = form.querySelector("#lg-title").value.trim(), company = form.querySelector("#lg-company").value.trim();
+      var link = form.querySelector("#lg-link").value.trim(), stage = form.querySelector("#lg-stage").value;
+      if (!title || !company) { status.textContent = "Add both a job title and a company."; return; }
+      if (link && !safeUrl(link)) { status.textContent = "The link needs to start with http:// or https://"; return; }
+      var id = slug(company, title);
+      if (!id) { status.textContent = "Use letters or numbers in the title or company."; return; }
+      var t = today(), ref = db.collection(COLL).doc(id), btn = form.querySelector("#lg-submit");
+      btn.disabled = true; status.textContent = "";
+      ref.get().then(function (snap) {
+        if (snap.exists) return ref.update({ status: stage, stageOn: t, appliedOn: stage === "new" ? null : t });
+        return ref.set({ title: title, company: company, link: link || null, location: null, posted: null, source: "Logged by you", salary: null, fit: null,
+          why: null, gap: null, found: t, addedBy: "manual", status: stage, stageOn: t, appliedOn: stage === "new" ? null : t, notes: "" });
+      }).then(function () { form.reset(); showToast("Added " + title, null); }, function (err) {
+        status.textContent = err && err.code === "quota_exceeded" ? "Your list is full. Remove old jobs before adding more." : "Couldn't add that job. Try again in a moment.";
+      }).then(function () { btn.disabled = false; });
+    });
+    return h("details", { class: "log" }, [h("summary", { text: "+ Log a job you found yourself" }),
+      h("p", { class: "rmeta", style: "margin:4px 0 0", text: "Applied through LinkedIn or a referral? Add it so the shortlist skips it too." }), form]);
+  }
+
+  function renderBoard() {
+    var cols = PIPE.map(function (st) {
+      var items = jobs.filter(function (j) { return statusOf(j) === st; }).sort(function (a, b) { return (b.stageOn || b.appliedOn || "") < (a.stageOn || a.appliedOn || "") ? -1 : 1; });
+      return h("section", { class: "col", "aria-label": LABEL[st] }, [
+        h("h3", null, [h("span", { text: LABEL[st] }), h("span", { class: "n", text: String(items.length) })]),
+        items.length ? null : h("div", { class: "colempty", text: st === "applied" ? "Mark jobs as applied and they land here." : "Nothing here yet." })
+      ].concat(items.map(function (j) {
+        var sel = h("select", { "aria-label": "Move " + (j.title || "job") + " to", onchange: function (e) { setStatus(j, e.target.value); } },
+          PIPE.concat(["new"]).map(function (s) { return h("option", { value: s, text: s === st ? LABEL[s] : "Move to " + LABEL[s] }); }));
+        sel.value = st;
+        return h("div", { class: "card" }, [
+          h("button", { type: "button", class: "open", "data-jid": j.id, onclick: function () { openSheet(j.id); } }, [
+            h("b", { text: j.title || "Untitled role", style: "font-size:14px;line-height:1.2" }),
+            h("span", { class: "rmeta", text: (j.company || "") + (j.appliedOn ? " · applied " + fmtDate(j.appliedOn) : "") }),
+            j.notes ? h("span", { class: "rmeta", text: "✎ " + String(j.notes).slice(0, 60) + (String(j.notes).length > 60 ? "…" : "") }) : null
+          ]),
+          sel
+        ]);
+      })));
+    });
+    mainEl.replaceChildren(
+      h("div", { class: "section-label" }, [h("span", { text: "APPLICATION BOARD" }), h("span", { class: "board-scroll", text: "SCROLL →" })]),
+      h("div", { class: "board" }, cols)
+    );
+  }
+
+  function toggleRow(id, title, desc, checked, extra) {
+    return h("div", { class: "toggle" }, [
+      h("label", { for: id }, [h("b", { text: title })]),
+      h("p", { text: desc }),
+      h("span", { class: "switch" }, [h("input", { type: "checkbox", id: id, role: "switch", checked: checked }), h("span")]),
+      extra || null
+    ]);
+  }
+  function prefsFields(s, px) {
+    return [
+      h("label", { class: "field" }, ["Your first name", h("small", { text: "Used to greet you." }), h("input", { type: "text", id: px + "name", value: s.name || "" })]),
+      h("label", { class: "field" }, ["Max years a job may ask", h("small", { text: "Jobs asking this many or more are skipped." }), h("input", { type: "number", min: "1", max: "20", id: px + "maxYears", value: String(s.maxYears || 3) })]),
+      h("label", { class: "field full" }, ["Roles you want, most important first", h("small", { text: "One per line or comma-separated." }), h("textarea", { id: px + "roles", value: s.roles || "" })]),
+      h("label", { class: "field full" }, ["Roles or companies to avoid", h("input", { type: "text", id: px + "avoid", value: s.avoid || "", placeholder: "e.g. sales, call center" })]),
+      h("label", { class: "field" }, ["Location", h("input", { type: "text", id: px + "location", value: s.location || "", placeholder: "e.g. Remote, or hybrid in my city" })]),
+      h("label", { class: "field" }, ["Minimum salary (optional)", h("input", { type: "text", id: px + "salary", value: s.salaryFloor || "", placeholder: "e.g. 40,000 a month" })])
+    ];
+  }
+  function readPrefs(root, px) {
+    var g = function (id) { return root.querySelector("#" + px + id); };
+    var out = {};
+    if (g("name")) out.name = g("name").value.trim();
+    if (g("maxYears")) out.maxYears = Math.max(1, Math.min(20, parseInt(g("maxYears").value, 10) || 3));
+    if (g("roles")) out.roles = g("roles").value.trim();
+    if (g("avoid")) out.avoid = g("avoid").value.trim();
+    if (g("location")) out.location = g("location").value.trim();
+    if (g("salary")) out.salaryFloor = g("salary").value.trim();
+    if (g("learn")) out.learnFromDismissals = g("learn").checked;
+    if (g("closed")) out.autoCheckClosed = g("closed").checked;
+    if (g("follow")) out.followUps = g("follow").checked;
+    if (g("days")) out.followUpDays = Math.max(1, Math.min(60, parseInt(g("days").value, 10) || 7));
+    return out;
+  }
+  function smartToggles(s, px) {
+    return [
+      toggleRow(px + "learn", "Learn from “Not for me”", "When you pass on a job, pick a quick reason. Your shortlist uses those reasons to sharpen future picks.", s.learnFromDismissals),
+      toggleRow(px + "closed", "Flag closed postings for me", "Each run checks jobs you haven't reviewed and marks the ones that have closed as Expired.", s.autoCheckClosed),
+      toggleRow(px + "follow", "Remind me to follow up", "Shows applications with no reply after a set number of days.", s.followUps,
+        h("label", { class: "field", style: "grid-column:1 / -1;margin-top:8px;max-width:220px" }, ["Days before a reminder", h("input", { type: "number", min: "1", max: "60", id: px + "days", value: String(s.followUpDays || 7) })]))
+    ];
+  }
+  function renderSettings() {
+    var s = S();
+    var savedEl = h("span", { class: "saved", role: "status" });
+    var form = h("form", { id: "settingsForm", novalidate: true }, [
+      h("div", { class: "section-label" }, [h("span", { text: "YOUR SEARCH" })]),
+      h("div", { class: "form" }, prefsFields(s, "s-")),
+      h("p", { class: "rmeta", style: "margin:8px 0 0", text: "Your weekday shortlist reads these each run." }),
+      h("div", { class: "section-label" }, [h("span", { text: "SMART FEATURES" })]),
+      h("div", { class: "bigrule" }, smartToggles(s, "s-")),
+      h("div", { class: "btnrow", style: "margin-top:16px" }, [h("button", { type: "submit", class: "primary", text: "Save settings" }), savedEl])
+    ]);
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      savedEl.textContent = "";
+      saveSettings(readPrefs(form, "s-")).then(function () { savedEl.textContent = "SAVED"; }, saveErr);
+    });
+    var rs = { text: (resume && resume.text) || "", name: (resume && resume.fileName) || "", source: resume && resume.source, updatedOn: resume && resume.updatedOn };
+    var rSaved = h("span", { class: "saved", role: "status" });
+    var resumeForm = h("form", { id: "resumeForm", novalidate: true }, [
+      h("div", { class: "section-label" }, [h("span", { text: "YOUR RESUME" })]),
+      resumeEditor(rs, function () { rSaved.textContent = ""; }, "s-res"),
+      h("div", { style: "margin-top:10px" }, [privacyNote()]),
+      h("div", { class: "btnrow", style: "margin-top:12px" }, [h("button", { type: "submit", class: "primary", text: "Save resume" }), rSaved])
+    ]);
+    resumeForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      if (!String(rs.text || "").trim()) { rSaved.textContent = ""; showToast("Add your resume text first.", null); return; }
+      saveResume(rs).then(function () { rSaved.textContent = "SAVED"; }, saveErr);
+    });
+    mainEl.replaceChildren(
+      resumeForm,
+      form,
+      h("div", { class: "section-label" }, [h("span", { text: "KEYBOARD" })]),
+      h("div", { class: "keys bigrule", style: "padding-top:12px" }, [
+        h("span", null, [h("kbd", { text: "J" }), " ", h("kbd", { text: "K" })]), h("span", { text: "Move down and up the list" }),
+        h("span", null, [h("kbd", { text: "Enter" })]), h("span", { text: "Open the job" }),
+        h("span", null, [h("kbd", { text: "A" })]), h("span", { text: "Applied" }),
+        h("span", null, [h("kbd", { text: "X" })]), h("span", { text: "Not for me" }),
+        h("span", null, [h("kbd", { text: "E" })]), h("span", { text: "Expired or closed" }),
+        h("span", null, [h("kbd", { text: "U" })]), h("span", { text: "Undo" }),
+        h("span", null, [h("kbd", { text: "/" })]), h("span", { text: "Search" })
+      ]),
+      h("div", { class: "btnrow", style: "margin-top:20px" }, [h("button", { type: "button", class: "ghost", text: "Replay the intro", onclick: function () { openOnboarding(true); } })]),
+      h("p", { class: "rmeta", style: "margin:28px 0 0" }, ["Hirelist v" + VERSION + " · by Louis Cada · ", h("a", { class: "link-out", href: "https://github.com/louiscada/hirelist-skill/issues", target: "_blank", rel: "noopener noreferrer", text: "Report a problem or suggest an idea" })])
+    );
+  }
+
+  /* ---------- sheet ---------- */
+  function openSheet(id) { openId = id; renderSheet(); var x = document.querySelector("#sheetHost .x"); if (x) x.focus(); }
+  function closeSheet() {
+    if (letterCtl) letterCtl.abort();
+    letterFor = null; sheetLocked = false;
+    var id = openId; openId = null;
+    flushNote(id);
+    document.getElementById("sheetHost").replaceChildren();
+    var el = id && mainEl.querySelector('[data-jid="' + esc(id) + '"]'); if (el) el.focus();
+  }
+  function flushNote(id) {
+    if (!id || !noteTimers[id]) return;
+    clearTimeout(noteTimers[id].t); var fn = noteTimers[id].fn; delete noteTimers[id]; fn();
+  }
+  function openLetter(id) { letterFor = id; letterMsg = ""; renderLetter(); var x = document.querySelector("#sheetHost .x"); if (x) x.focus(); }
+  function backFromLetter() { if (letterCtl) letterCtl.abort(); letterFor = null; sheetLocked = false; renderSheet(); }
+  function renderLetter() {
+    var host = document.getElementById("sheetHost");
+    var j = letterFor && byId(letterFor);
+    if (!j) { letterFor = null; renderSheet(); return; }
+    var resumeText = resume && resume.text ? String(resume.text) : "";
+    var head = h("div", { class: "sheet-head", style: "grid-template-columns:minmax(0,1fr) auto" }, [
+      h("div", { style: "display:flex;flex-direction:column;gap:4px;min-width:0" }, [
+        h("span", { class: "tag dim", text: "COVER LETTER" }),
+        h("h2", { id: "lt-title", text: (j.title || "This role") + (j.company ? " · " + j.company : "") })
+      ]),
+      h("button", { type: "button", class: "x", "aria-label": "Back to the job", text: "←", onclick: backFromLetter })
+    ]);
+    var kids;
+    if (!resumeText.trim()) {
+      kids = [head,
+        h("div", { class: "empty" }, [h("strong", { text: "Add your resume first" }), "Cover letters are written from your resume, so Hirelist needs a copy of it."]),
+        h("div", { class: "btnrow" }, [h("button", { type: "button", class: "primary", text: "Add my resume", onclick: function () { closeSheet(); go("settings"); } })])
+      ];
+    } else {
+      var status = h("div", { class: "thinking", role: "status", text: letterMsg });
+      var setMsg = function (t) { letterMsg = t; status.textContent = t; };
+      var jd = h("textarea", { class: "jd", id: "lt-jd", value: j.jobDescription || "", placeholder: "Paste the job description from the posting for a sharper letter." });
+      var out = h("textarea", { class: "out", id: "lt-out", value: j.coverLetter || "", placeholder: "Your letter will appear here." });
+      var exportRow = h("div", { class: "btnrow" });
+      var genBtn = h("button", { type: "button", class: "primary", text: j.coverLetter ? "Write a new version" : "Write my cover letter" });
+      var stopBtn = h("button", { type: "button", class: "ghost", text: "Stop", hidden: true, onclick: function () { if (letterCtl) letterCtl.abort(); } });
+      var saveTimer = null;
+      function syncExport() { exportRow.hidden = !out.value.trim(); }
+      out.addEventListener("input", function () {
+        syncExport();
+        clearTimeout(saveTimer);
+        var val = out.value;
+        saveTimer = setTimeout(function () { queueWrite(j.id, { coverLetter: val }).catch(saveErr); }, 900);
+      });
+      var copyBtn = h("button", { type: "button", class: "ghost", text: "Copy text", onclick: function () {
+        var txt = out.value;
+        var fallback = function () { out.focus(); out.select(); showToast("Text selected. Press Ctrl+C or ⌘C to copy.", null); };
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(function () { showToast("Copied to clipboard", null); }, fallback);
+        else fallback();
+      } });
+      var pdfBtn = h("button", { type: "button", class: "ghost", text: "Save as PDF", onclick: function () { var t = out.value; saveFile(fileBase(j) + ".pdf", function () { return letterPdf(t); }); } });
+      var docBtn = h("button", { type: "button", class: "ghost", text: "Save as Word", onclick: function () { var t = out.value; saveFile(fileBase(j) + ".docx", function () { return letterDocx(t); }); } });
+      exportRow.replaceChildren(copyBtn, pdfBtn, docBtn);
+      syncExport();
+      genBtn.addEventListener("click", function () {
+        var jdText = jd.value.trim();
+        sheetLocked = true; genBtn.disabled = true; stopBtn.hidden = false; out.readOnly = true; exportRow.hidden = true;
+        setMsg("Thinking… this usually takes 10–30 seconds.");
+        window.claude.use("sample").then(function (sample) {
+          if (!sample) throw { code: "not_granted" };
+          letterCtl = new AbortController();
+          return sample(letterPrompt(j, jdText, resumeText), {
+            signal: letterCtl.signal, cache: false,
+            onText: function (u) { out.value = u.text; setMsg("Writing…"); }
+          });
+        }).then(function (res) {
+          out.value = cleanLetter(res.text);
+          setMsg(res.truncated ? "The letter was cut short. Try writing a new version." : "Done. Edit anything you like; changes save on their own.");
+          return queueWrite(j.id, { coverLetter: out.value, coverLetterOn: today(), jobDescription: jdText || null }).catch(saveErr);
+        }).catch(function (e) {
+          var c = e && e.code;
+          if (c === "cancelled") { if (e.text) out.value = e.text; setMsg("Stopped."); }
+          else if (c === "not_granted" || c === "sampling_disabled" || c === "not_declared" || c === "capability_disabled" || c === "capability_removed") setMsg("Cover letters need permission to use Claude. Allow it when asked, or check this page's permissions.");
+          else if (c === "rate_limited") { if (e.text) out.value = e.text; setMsg("You've reached a usage limit. Try again in a little while."); }
+          else if (c === "refused") { out.value = j.coverLetter || ""; setMsg("Claude couldn't write this one. Try adding the job description."); }
+          else { if (e && e.text) out.value = e.text; setMsg("Something went wrong. Try again."); }
+        }).then(function () {
+          letterCtl = null; sheetLocked = false; genBtn.disabled = false; genBtn.textContent = "Write a new version";
+          stopBtn.hidden = true; out.readOnly = false; syncExport();
+        });
+      });
+      kids = [head,
+        h("p", { class: "rmeta", style: "margin:0;font-size:14px", text: "Written by Claude from your resume" + (resume && resume.fileName ? " (" + resume.fileName + ")" : "") + " and this job. Check it before you send it." }),
+        h("label", { class: "field", for: "lt-jd" }, ["Job description (optional)"]), jd,
+        h("div", { class: "btnrow" }, [genBtn, stopBtn]),
+        status,
+        h("label", { class: "field", for: "lt-out" }, ["Your letter"]), out,
+        exportRow
+      ];
+    }
+    var sheet = h("div", { class: "sheet letter", role: "dialog", "aria-modal": "true", "aria-labelledby": "lt-title" }, kids);
+    var scrim = h("div", { class: "scrim", onclick: function (e) { if (e.target === scrim && !sheetLocked) closeSheet(); } }, [sheet]);
+    host.replaceChildren(scrim);
+  }
+  function renderSheet() {
+    var host = document.getElementById("sheetHost");
+    if (letterFor) { if (!sheetLocked && !host.contains(document.activeElement)) renderLetter(); return; }
+    var j = openId && byId(openId);
+    if (!j) { host.replaceChildren(); openId = null; return; }
+    var st = statusOf(j), fit = fitOf(j), link = safeUrl(j.link), age = daysSince(j.posted);
+    var bd = j.fitBreakdown && typeof j.fitBreakdown === "object" ? j.fitBreakdown : null;
+    var notes = h("textarea", { id: "note-" + j.id, value: j.notes || "", placeholder: "Contact person, referral, interview date, salary discussed…" });
+    notes.addEventListener("input", function () {
+      var id = j.id, val = notes.value;
+      if (noteTimers[id]) clearTimeout(noteTimers[id].t);
+      var fn = function () { if ((byId(id) || {}).notes !== val) queueWrite(id, { notes: val }).catch(saveErr); };
+      noteTimers[id] = { fn: fn, t: setTimeout(function () { delete noteTimers[id]; fn(); }, 900) };
+    });
+    notes.addEventListener("blur", function () { flushNote(j.id); });
+
+    var actions;
+    if (st === "new") {
+      actions = h("div", { class: "btnrow" }, [
+        h("button", { type: "button", class: "primary", text: "I applied", onclick: function () { closeSheet(); act(j, "applied"); } }),
+        h("button", { type: "button", class: "ghost", text: "Not for me", onclick: function () { closeSheet(); act(j, "skip"); } }),
+        h("button", { type: "button", class: "ghost", text: "Expired / closed", onclick: function () { closeSheet(); act(j, "expired"); } })
+      ]);
+    } else if (inPipe(j)) {
+      actions = h("div", { class: "stagepick", role: "group", "aria-label": "Stage" }, PIPE.map(function (s) {
+        return h("button", { type: "button", "aria-pressed": s === st ? "true" : "false", text: LABEL[s], onclick: function () { if (s !== st) setStatus(j, s); } });
+      }).concat([h("button", { type: "button", text: "Undo applied", onclick: function () { setStatus(j, "new"); } })]));
+    } else {
+      actions = h("div", { class: "btnrow" }, [h("button", { type: "button", class: "ghost", text: "Move back to review", onclick: function () { setStatus(j, "new"); } })]);
+    }
+    var reasonText = null;
+    if (st === "skipped" && j.skipReason) { REASONS.forEach(function (r) { if (r[0] === j.skipReason) reasonText = r[1]; }); }
+
+    var bars = null;
+    if (bd) {
+      var barRows = BREAK.map(function (b) {
+        var v = Number(bd[b[0]]); if (bd[b[0]] == null || isNaN(v)) return null;
+        v = Math.max(0, Math.min(10, v));
+        return h("div", { class: "bar" }, [h("span", { text: b[1] }), h("span", { class: "track" }, [h("span", { class: "fill", style: "width:" + (v * 10) + "%" })]), h("b", { text: String(v) })]);
+      }).filter(Boolean);
+      if (barRows.length) bars = h("div", { class: "bars" }, [h("div", { class: "section-label", style: "padding:4px 0 2px" }, [h("span", { text: "WHY IT SCORED " + (fit == null ? "" : fit) })])].concat(barRows));
+    }
+
+    var sheet = h("div", { class: "sheet", role: "dialog", "aria-modal": "true", "aria-labelledby": "sheet-title" }, [
+      h("div", { class: "sheet-head" }, [
+        h("span", { class: "fitnum" + (fit == null ? " none" : fit >= 9 ? " hi" : ""), text: fit == null ? "—" : String(fit), "aria-label": fit == null ? "No fit score" : "Fit " + fit + " of 10" }),
+        h("div", { style: "display:flex;flex-direction:column;gap:4px;min-width:0" }, [
+          h("span", { class: "tag " + (st === "new" ? "new" : "stage"), text: LABEL[st].toUpperCase() + (j.appliedOn && inPipe(j) ? " · " + fmtDate(j.appliedOn).toUpperCase() : "") + (reasonText ? " · " + reasonText.toUpperCase() : "") }),
+          h("h2", { id: "sheet-title", text: j.title || "Untitled role" }),
+          h("span", { class: "rmeta", style: "font-size:14px", text: [j.company, j.location].filter(Boolean).join(" · ") })
+        ]),
+        h("button", { type: "button", class: "x", "aria-label": "Close", text: "✕", onclick: closeSheet })
+      ]),
+      h("div", { class: "hint", style: "padding:0;flex-wrap:wrap" }, [
+        h("span", { text: [j.source, j.posted ? "posted " + fmtDate(j.posted) : null].filter(Boolean).join(" · ").toUpperCase() }),
+        age != null ? h("span", { style: age >= 21 ? "color:var(--amber);font-weight:700" : null, text: age + " DAYS OLD" }) : null,
+        j.salary ? h("span", { text: String(j.salary) }) : null
+      ]),
+      link ? h("a", { class: "link-out", href: link, target: "_blank", rel: "noopener noreferrer", text: "Open the posting ↗" }) : null,
+      actions,
+      h("div", { class: "btnrow" }, [h("button", { type: "button", class: "ghost", text: j.coverLetter ? "✎ Open cover letter" : "✎ Write a cover letter", onclick: function () { openLetter(j.id); } })]),
+      bars,
+      j.why || j.gap ? h("div", { class: "kv" }, [j.why ? h("div", { text: j.why }) : null, j.gap ? h("div", { class: "gap", text: "Gap: " + j.gap }) : null]) : null,
+      h("label", { class: "field" }, ["Notes", notes])
+    ]);
+    var scrim = h("div", { class: "scrim", onclick: function (e) { if (e.target === scrim) closeSheet(); } }, [sheet]);
+    host.replaceChildren(scrim);
+  }
+
+  /* ---------- reason picker ---------- */
+  function closeReason() { reasonFor = null; document.getElementById("sheetHost").replaceChildren(); }
+  function renderReason() {
+    var host = document.getElementById("sheetHost");
+    var j = reasonFor && byId(reasonFor);
+    if (!j) { closeReason(); return; }
+    function pick(r) { closeReason(); setStatus(j, "skipped", { reason: r }); }
+    var sheet = h("div", { class: "sheet", role: "dialog", "aria-modal": "true", "aria-labelledby": "rs-title" }, [
+      h("div", { class: "sheet-head", style: "grid-template-columns:minmax(0,1fr) auto" }, [
+        h("div", { style: "display:flex;flex-direction:column;gap:4px;min-width:0" }, [
+          h("span", { class: "tag dim", text: "NOT FOR ME" }),
+          h("h2", { id: "rs-title", text: "What's off about " + (j.title || "this job") + "?" })
+        ]),
+        h("button", { type: "button", class: "x", "aria-label": "Cancel", text: "✕", onclick: closeReason })
+      ]),
+      h("p", { class: "rmeta", style: "margin:0;font-size:14px", text: "Your shortlist uses this to pick better jobs. You can turn this off in Settings." }),
+      h("div", { class: "reasons" }, REASONS.map(function (r) { return h("button", { type: "button", text: r[1], onclick: function () { pick(r[0]); } }); })),
+      h("button", { type: "button", class: "ghost", style: "align-self:flex-start", text: "Skip without a reason", onclick: function () { pick(null); } })
+    ]);
+    var scrim = h("div", { class: "scrim", onclick: function (e) { if (e.target === scrim) closeReason(); } }, [sheet]);
+    host.replaceChildren(scrim);
+    var first = sheet.querySelector(".reasons button"); if (first) first.focus();
+  }
+
+  /* ---------- onboarding ---------- */
+  var onbStep = 0, onbDraft = null, onbReplay = false;
+  function openOnboarding(replay) {
+    onbStep = 0; onbDraft = S(); onbReplay = !!replay;
+    onbResume = { text: (resume && resume.text) || "", name: (resume && resume.fileName) || "", source: resume && resume.source, updatedOn: resume && resume.updatedOn };
+    renderOnb();
+  }
+  function renderOnb() {
+    var host = document.getElementById("onbHost");
+    var root = h("div", { class: "in pad" });
+    var dots = h("div", { class: "steps", role: "img", "aria-label": "Step " + (onbStep + 1) + " of 5" }, [0, 1, 2, 3, 4].map(function (i) { return h("span", { class: i <= onbStep ? "on" : "" }); }));
+    var status = h("div", { class: "status-line", role: "status" });
+    function capture() { Object.assign(onbDraft, readPrefs(root, "o-")); }
+    function next() { capture(); onbStep++; renderOnb(); }
+    function back() { capture(); onbStep--; renderOnb(); }
+    var body;
+    if (onbStep === 0) {
+      body = [
+        h("h2", null, ["Hirelist", h("span", { style: "color:var(--signal)", text: "." })]),
+        h("p", { class: "lead", text: "Every weekday, your shortlist searches job sites for roles that fit your resume. This is where you sort them." }),
+        h("div", { class: "bigrule" }, [
+          h("div", { class: "feature" }, [h("span", { class: "num", text: "1" }), h("div", null, [h("b", { text: "Today" }), h("span", { text: "The three best jobs to apply to, plus follow-ups that need a nudge." })])]),
+          h("div", { class: "feature" }, [h("span", { class: "num", text: "2" }), h("div", null, [h("b", { text: "Swipe to sort" }), h("span", { text: "Right for applied, left for not for me. Nothing you've sorted comes back." })])]),
+          h("div", { class: "feature" }, [h("span", { class: "num", text: "3" }), h("div", null, [h("b", { text: "Board" }), h("span", { text: "Track every application from applied to offer." })])])
+        ]),
+        h("div", { class: "btnrow" }, [h("button", { type: "button", class: "primary", text: "Set up my search", onclick: next }),
+          onbReplay ? h("button", { type: "button", class: "ghost", text: "Close", onclick: closeOnb }) : null])
+      ];
+    } else if (onbStep === 1) {
+      body = [
+        h("h2", { text: "Add your resume" }),
+        h("p", { class: "lead", text: "Your shortlist reads it to find jobs that fit you, and cover letters are written from it. Upload a PDF or paste the text. You can skip this and add it later in Settings." }),
+        resumeEditor(onbResume, null, "o-res"),
+        privacyNote(),
+        h("div", { class: "btnrow" }, [h("button", { type: "button", class: "primary", text: "Next", onclick: next }), h("button", { type: "button", class: "ghost", text: "Back", onclick: back })])
+      ];
+    } else if (onbStep === 2) {
+      body = [
+        h("h2", { text: "What are you looking for?" }),
+        h("p", { class: "lead", text: "Your shortlist uses this together with your resume. You can change it any time in Settings." }),
+        h("div", { class: "form" }, prefsFields(onbDraft, "o-")),
+        h("div", { class: "btnrow" }, [h("button", { type: "button", class: "primary", text: "Next", onclick: next }), h("button", { type: "button", class: "ghost", text: "Back", onclick: back })])
+      ];
+    } else if (onbStep === 3) {
+      body = [
+        h("h2", { text: "Pick your extras" }),
+        h("p", { class: "lead", text: "Each one is optional. Switch any of them off now, or later in Settings." }),
+        h("div", { class: "bigrule" }, smartToggles(onbDraft, "o-")),
+        h("div", { class: "btnrow" }, [h("button", { type: "button", class: "primary", text: "Next", onclick: next }), h("button", { type: "button", class: "ghost", text: "Back", onclick: back })])
+      ];
+    } else {
+      body = [
+        h("h2", { text: "You're set" + (onbDraft.name ? ", " + onbDraft.name : "") + "." }),
+        h("p", { class: "lead", text: "New matches arrive each weekday morning. A few things to know:" }),
+        h("div", { class: "bigrule" }, [
+          h("div", { class: "feature" }, [h("span", { class: "num", text: "→" }), h("div", null, [h("b", { text: "Swipe right once you apply" }), h("span", { text: "Or open a job and tap I applied. It moves to your Board." })])]),
+          h("div", { class: "feature" }, [h("span", { class: "num", text: "←" }), h("div", null, [h("b", { text: "Swipe left to pass" }), h("span", { text: onbDraft.learnFromDismissals ? "Pick a reason so tomorrow's picks get sharper." : "It won't be suggested again." })])]),
+          h("div", { class: "feature" }, [h("span", { class: "num", text: "✉" }), h("div", null, [h("b", { text: "Cover letters in one tap" }), h("span", { text: String(onbResume.text || "").trim() ? "Open any job and tap Write a cover letter. Copy it, or save it as PDF or Word." : "Add your resume in Settings, then open any job and tap Write a cover letter." })])]),
+          h("div", { class: "feature" }, [h("span", { class: "num", text: "✎" }), h("div", null, [h("b", { text: "Keep notes on each job" }), h("span", { text: "Contacts, interview dates, salary talks. On a computer, try the J, K, A and X keys." })])])
+        ]),
+        status,
+        h("div", { class: "btnrow" }, [h("button", { type: "button", class: "primary", id: "onb-finish", text: "Start using Hirelist", onclick: function () {
+          var btn = root.querySelector("#onb-finish"); btn.disabled = true;
+          var hasResume = String(onbResume.text || "").trim().length > 0;
+          (hasResume ? saveResume(onbResume) : Promise.resolve()).then(function () {
+            return saveSettings(Object.assign({}, onbDraft, { onboarded: true }));
+          }).then(closeOnb, function (e) {
+            btn.disabled = false; status.textContent = e && e.code === "invalid_argument" ? "Only the list's owner can save these settings." : "Couldn't save. Check your connection and try again.";
+          });
+        } }), h("button", { type: "button", class: "ghost", text: "Back", onclick: back })])
+      ];
+    }
+    root.replaceChildren.apply(root, [dots].concat(body));
+    host.replaceChildren(h("div", { class: "onb", role: "dialog", "aria-modal": "true", "aria-label": "Set up Hirelist" }, [root]));
+    var focusEl = root.querySelector("h2"); if (focusEl) { focusEl.setAttribute("tabindex", "-1"); focusEl.focus(); }
+  }
+  function closeOnb() {
+    document.getElementById("onbHost").replaceChildren();
+    if (view === "settings") mainEl.replaceChildren();
+    render();
+  }
+  function maybeOnboard() {
+    if (!settingsReady || document.getElementById("onbHost").childNodes.length) return;
+    if (!settings || !settings.onboarded) openOnboarding(false);
+  }
+
+  /* ---------- keyboard + nav ---------- */
+  document.querySelectorAll("nav.tabs button").forEach(function (b) { b.addEventListener("click", function () { go(b.dataset.view); }); });
+  document.addEventListener("keydown", function (e) {
+    var t = e.target, tag = (t.tagName || "").toLowerCase();
+    var onbOpen = document.getElementById("onbHost").childNodes.length > 0;
+    if (e.key === "Escape") {
+      if (onbOpen && settings && settings.onboarded) { closeOnb(); return; }
+      if (reasonFor) { closeReason(); return; }
+      if (letterFor) { if (!sheetLocked) backFromLetter(); return; }
+      if (openId) { closeSheet(); return; }
+    }
+    if (tag === "input" || tag === "textarea" || tag === "select" || t.isContentEditable) return;
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (onbOpen || openId || reasonFor) return;
+    var rows = [].slice.call(mainEl.querySelectorAll(".rowmain"));
+    var idx = rows.indexOf(document.activeElement);
+    if (e.key === "j" || (e.key === "ArrowDown" && idx >= 0)) { e.preventDefault(); var n = rows[idx + 1] || rows[0]; if (n) n.focus(); }
+    else if (e.key === "k" || (e.key === "ArrowUp" && idx >= 0)) { e.preventDefault(); var p = rows[idx - 1] || rows[rows.length - 1]; if (p) p.focus(); }
+    else if (e.key === "/") { e.preventDefault(); if (view !== "all") go("all"); ensureSearch().focus(); }
+    else if (e.key === "u") { doUndo(); }
+    else if (idx >= 0) {
+      var j = byId(rows[idx].dataset.jid);
+      if (!j || statusOf(j) !== "new") return;
+      if (e.key === "a") act(j, "applied"); else if (e.key === "x") act(j, "skip"); else if (e.key === "e") act(j, "expired");
+    }
+  });
+
+  /* ---------- boot ---------- */
+  if (!(window.claude && window.claude.use)) {
+    mainEl.replaceChildren(h("div", { class: "empty" }, [h("strong", { text: "Open Hirelist in Claude" }), "Your saved jobs load only inside the Claude app or on claude.ai."]));
+    stampEl.textContent = "";
+    return;
+  }
+  window.claude.use("db").then(function (d) {
+    if (!d) {
+      mainEl.replaceChildren(h("div", { class: "empty" }, [h("strong", { text: "Sign in to see your jobs" }), "Your list loads once you're signed in to Claude."]));
+      stampEl.textContent = "";
+      return;
+    }
+    db = d;
+    db.collection(COLL).onSnapshot(function (snap) {
+      jobs = snap.docs.map(function (s) { var o = Object.assign({}, s.data()); o.id = s.id; return o; });
+      jobsReady = true;
+      if (openId && !byId(openId)) closeSheet();
+      render();
+    }, function () { showToast("Lost the connection to your jobs. Reload to reconnect.", null); });
+    db.doc(SETDOC).onSnapshot(function (snap) {
+      settings = snap.exists ? Object.assign({}, snap.data()) : null;
+      settingsReady = true;
+      maybeOnboard();
+      if (jobsReady && view !== "settings") render();
+    }, function () { settingsReady = true; });
+    db.doc(RESDOC).onSnapshot(function (snap) {
+      resume = snap.exists ? Object.assign({}, snap.data()) : null;
+      resumeReady = true;
+      if (view === "settings") { if (!mainEl.contains(document.activeElement)) renderSettings(); }
+      else if (jobsReady) render();
+    }, function () { resumeReady = true; });
+  });
+})();
+</script>

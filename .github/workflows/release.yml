@@ -1,0 +1,30 @@
+name: Release
+
+# When a release is published on GitHub, run the tests, build hirelist.zip and
+# hirelist.skill, and attach both so people can install Hirelist without GitHub.
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  attach-skill:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Run tests
+        run: python -m unittest discover -s tests -v
+      - name: Build hirelist.zip and hirelist.skill
+        run: python tools/build_skill.py
+      - name: Attach to the release
+        run: gh release upload "${{ github.event.release.tag_name }}" dist/hirelist.zip dist/hirelist.skill --clobber
+        env:
+          GH_TOKEN: ${{ github.token }}

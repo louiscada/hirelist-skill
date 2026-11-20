@@ -1,0 +1,16 @@
+# Personal job-search data — never commit
+hirelist-data/
+jobs.csv
+!hirelist/templates/jobs.csv
+profile.md
+*resume*.pdf
+*cv*.pdf
+*.tmp
+
+__pycache__/
+*.pyc
+.DS_Store
+node_modules/
+
+# Built skill package (attached to releases instead)
+dist/
